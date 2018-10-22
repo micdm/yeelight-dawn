@@ -1,0 +1,6 @@
+cryptography
+freezegun
+pytest
+pytest-coverage
+pytest-mock
+yeelight
