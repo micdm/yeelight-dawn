@@ -46,29 +46,29 @@ def get_mac() -> str:
         raise RuntimeError('MAC not found')
 
 
-def enable_developer_mode(sock, stamp: int, token: bytes) -> dict:
+def enable_developer_mode(sock, device_id: int, stamp: int, token: bytes) -> dict:
     logger.info('Enabling developer mode...')
     payload = build_payload('set_ps', ['cfg_lan_ctrl', '1'])
-    return send_packet(sock, stamp, token, payload)
+    return send_packet(sock, device_id, stamp, token, payload)
 
 
-def write_credentials(sock, stamp: int, token: bytes, ssid: str, password: str) -> dict:
+def write_credentials(sock, device_id: int, stamp: int, token: bytes, ssid: str, password: str) -> dict:
     logger.info('Writing credentials %s:%s...', ssid, password)
     payload = build_payload('miIO.config_router', {
         'ssid': ssid,
         'passwd': password,
         'uid': 1
     })
-    return send_packet(sock, stamp, token, payload)
+    return send_packet(sock, device_id, stamp, token, payload)
 
 
 def build_payload(method: str, params: dict or list) -> bytes:
     return ('{"id": %s, "method": "%s", "params": %s}' % (int(time()), method, json.dumps(params))).encode()
 
 
-def send_packet(sock, stamp: int, token: bytes, payload: bytes) -> dict:
+def send_packet(sock, device_id: int, stamp: int, token: bytes, payload: bytes) -> dict:
     logger.debug('Payload is %s', payload)
-    packet = encrypt(stamp, token, payload)
+    packet = encrypt(device_id, stamp, token, payload)
     logger.debug('Packet is %s', packet)
     sock.sendto(packet, (HOST, PORT))
     data, _ = sock.recvfrom(1024)
@@ -90,11 +90,11 @@ def run():
     logger.info('MAC is %s', mac)
     ssid, password = get_args()
     if ssid and password:
-        response = enable_developer_mode(sock, stamp, token)
+        response = enable_developer_mode(sock, device_id, stamp, token)
         check_response(response)
         # Wait a bit to allow the bulb to process previous command
         sleep(2)
-        response = write_credentials(sock, stamp, token, ssid, password)
+        response = write_credentials(sock, device_id, stamp, token, ssid, password)
         check_response(response)
     else:
         logger.info('Provide SSID and password to enable developer mode and set up WiFi')

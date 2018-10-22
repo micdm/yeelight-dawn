@@ -79,22 +79,22 @@ def print_head(raw_packet: bytes):
     print("  md5 checksum: %s" % md5.hex())
 
 
-def encrypt(stamp: int, token: bytes, plaindata: bytes) -> bytes:
+def encrypt(device_id: int, stamp: int, token: bytes, plaindata: bytes) -> bytes:
     """Generate an encrypted packet from plain data.
 
     Args:
+        device_id: unique device ID
         stamp: incrementing counter
         token: 128 bit device token
         plaindata: plain data
     """
-    def init_msg_head(stamp: int, token: bytes, packet_len: int) -> bytes:
+    def init_msg_head(device_id: int, stamp: int, token: bytes, packet_len: int) -> bytes:
         head = struct.pack(
             '!BBHIII16s',
             0x21, 0x31,  # const magic value
             packet_len,
             0,  # unknown const
-#            0x02af3988,  # unknown const
-            0x02bddb77,
+            device_id,
             stamp,
             token  # overwritten by the MD5 checksum later
         )
@@ -102,7 +102,7 @@ def encrypt(stamp: int, token: bytes, plaindata: bytes) -> bytes:
 
     payload = AES_cbc_encrypt(token, plaindata)
     packet_len = len(payload) + 32
-    packet = bytearray(init_msg_head(stamp, token, packet_len) + payload)
+    packet = bytearray(init_msg_head(device_id, stamp, token, packet_len) + payload)
     checksum = md5(packet)
     for i in range(0, 16):
         packet[i+16] = checksum[i]
