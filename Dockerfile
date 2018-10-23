@@ -7,4 +7,4 @@ RUN apk --no-cache --virtual .build-deps add gcc libffi-dev musl-dev openssl-dev
     pip3 install -r /tmp/requirements.txt && \
     apk del .build-deps
 
-COPY ./dawn /
+COPY ./lib /app
