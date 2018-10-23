@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 MIN_BRIGHTNESS, MAX_BRIGHTNESS = 1, 100
 MIN_TEMPERATURE, MAX_TEMPERATURE = 1700, 4000
 STEP = timedelta(seconds=15)
-FINAL_WAIT_DURATION = timedelta(minutes=15)
+FINAL_WAIT_DURATION = timedelta(minutes=30)
 
 
 def get_args() -> dict:
