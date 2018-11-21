@@ -12,22 +12,23 @@ logger = logging.getLogger(__name__)
 MIN_BRIGHTNESS, MAX_BRIGHTNESS = 1, 100
 MIN_TEMPERATURE, MAX_TEMPERATURE = 1700, 4000
 STEP = timedelta(seconds=15)
-FINAL_WAIT_DURATION = timedelta(minutes=30)
 
 
 def get_args() -> dict:
     parser = ArgumentParser()
     parser.add_argument('dawn-time')
     parser.add_argument('dawn-duration', type=int)
+    parser.add_argument('wait-duration', type=int)
     parser.add_argument('bulb-address')
     parser.add_argument('--immediately', action='store_true')
     return vars(parser.parse_args())
 
 
-def parse_args(raw_args: dict) -> Tuple[time, timedelta, str, bool]:
+def parse_args(raw_args: dict) -> Tuple[time, timedelta, timedelta, str, bool]:
     dawn_time = time(*map(int, raw_args['dawn-time'].split(':')))
     dawn_duration = timedelta(minutes=raw_args['dawn-duration'])
-    return dawn_time, dawn_duration, raw_args['bulb-address'], raw_args['immediately']
+    wait_duration = timedelta(minutes=raw_args['wait-duration'])
+    return dawn_time, dawn_duration, wait_duration, raw_args['bulb-address'], raw_args['immediately']
 
 
 def is_dawn_time(dawn_time: time) -> bool:
@@ -49,7 +50,11 @@ def start_dawn(duration: timedelta, bulb: Bulb):
         bulb.set_brightness(brightness)
         sleep(STEP.seconds)
     logger.info('Rise and shine!')
-    sleep(FINAL_WAIT_DURATION.seconds)
+
+
+def wait_more(duration: timedelta, bulb: Bulb):
+    logger.info('Sleeping a bit more for %s', timedelta)
+    sleep(duration.seconds)
     logger.info('Turning off...')
     bulb.turn_off()
 
@@ -60,7 +65,7 @@ def get_value(min_value: int, max_value: int, steps: int, step: int) -> int:
 
 def run():
     raw_args = get_args()
-    dawn_time, dawn_duration, bulb_address, is_test_run = parse_args(raw_args)
+    dawn_time, dawn_duration, wait_duration, bulb_address, is_test_run = parse_args(raw_args)
     if is_test_run:
         logger.info('Dawn will be started immediately and will take %s', dawn_duration)
     else:
@@ -70,6 +75,7 @@ def run():
             if is_dawn_time(dawn_time) or is_test_run:
                 bulb = Bulb(bulb_address)
                 start_dawn(dawn_duration, bulb)
+                wait_more(wait_duration, bulb)
             else:
                 sleep(1)
         except KeyboardInterrupt:
